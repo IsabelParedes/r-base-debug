@@ -77,19 +77,26 @@ static int ParseBrowser(SEXP, SEXP);
 
 static void R_ReplFile(FILE *fp, SEXP rho)
 {
+    printf("REPTILE R_ReplFile\n");
     ParseStatus status;
     int savestack;
     RCNTXT cntxt;
 
     R_InitSrcRefState(&cntxt);
     savestack = R_PPStackTop;
+
+    printf("REPTILE R_ReplFile infinite for\n");
     for(;;) {
 	R_PPStackTop = savestack;
+    printf("REPTILE R_ReplFile R_Parse1File\n");
 	R_CurrentExpr = R_Parse1File(fp, 1, &status);
+    printf("REPTILE R_ReplFile R_Parse1File done\n");
 	switch (status) {
 	case PARSE_NULL:
+        printf("REPTILE R_ReplFile PARSE_NULL\n");
 	    break;
 	case PARSE_OK:
+        printf("REPTILE R_ReplFile PARSE_OK\n");
 	    R_Visible = FALSE;
 	    R_EvalDepth = 0;
 	    resetTimeLimits();
@@ -103,15 +110,18 @@ static void R_ReplFile(FILE *fp, SEXP rho)
 		PrintWarnings();
 	    break;
 	case PARSE_ERROR:
+        printf("REPTILE R_ReplFile PARSE_ERROR\n");
 	    R_FinalizeSrcRefState();
 	    parseError(R_NilValue, R_ParseError);
 	    break;
 	case PARSE_EOF:
+        printf("REPTILE R_ReplFile PARSE_EOF\n");
 	    endcontext(&cntxt);
 	    R_FinalizeSrcRefState();
 	    return;
 	    break;
 	case PARSE_INCOMPLETE:
+        printf("REPTILE R_ReplFile PARSE_INCOMPLETE\n");
 	    /* can't happen: just here to quieten -Wall */
 	    break;
 	}
@@ -726,7 +736,7 @@ static void R_LoadProfile(FILE *fparg, SEXP env)
 }
 
 
-int R_SignalHandlers = 1;  /* Exposed in R_interface.h */
+int R_SignalHandlers = 0;  /* Exposed in R_interface.h */
 
 const char* get_workspace_name(void);  /* from startup.c */
 
@@ -815,11 +825,14 @@ static void invalid_parameter_handler_watson(
 
 void setup_Rmainloop(void)
 {
+    printf("LOOP 0\n");
     volatile int doneit;
     volatile SEXP baseNSenv;
     SEXP cmd;
     char deferred_warnings[12][250];
     volatile int ndeferred_warnings = 0;
+
+    printf("LOOP 1\n");
 
 #ifdef Win32
     {
@@ -862,6 +875,8 @@ void setup_Rmainloop(void)
     }
 #endif
 
+    printf("LOOP 2\n");
+
     /* In case this is a silly limit: 2^32 -3 has been seen and
      * casting to intptr_r relies on this being smaller than 2^31 on a
      * 32-bit platform. */
@@ -872,6 +887,8 @@ void setup_Rmainloop(void)
 	R_CStackLimit = (uintptr_t)(0.95 * R_CStackLimit);
 
     InitConnections(); /* needed to get any output at all */
+
+    printf("LOOP 3\n");
 
     /* Initialize the interpreter's internal structures. */
 
@@ -957,6 +974,8 @@ void setup_Rmainloop(void)
 #endif /* not Win32 */
 #endif
 
+    printf("LOOP 4\n");
+
     /* make sure srand is called before R_tmpnam, PR#14381 */
     srand(TimeToSeed());
 
@@ -991,6 +1010,8 @@ void setup_Rmainloop(void)
     /* This provides a target for any non-local gotos */
     /* which occur during error handling */
 
+    printf("LOOP 5\n");
+
     R_Toplevel.nextcontext = NULL;
     R_Toplevel.callflag = CTXT_TOPLEVEL;
     R_Toplevel.cstacktop = 0;
@@ -1017,11 +1038,16 @@ void setup_Rmainloop(void)
     R_GlobalContext = R_ToplevelContext = R_SessionContext = &R_Toplevel;
     R_ExitContext = NULL;
 
+    printf("LOOP 6\n");
+
     R_Warnings = R_NilValue;
 
     /* This is the same as R_BaseEnv, but this marks the environment
        of functions as the namespace and not the package. */
     baseNSenv = R_BaseNamespace;
+    printf("BaseNSenv\n");
+    PrintValue(baseNSenv);
+    PrintValue(R_BaseNamespace);
 
     /* Set up some global variables */
     Init_R_Variables(baseNSenv);
@@ -1032,24 +1058,41 @@ void setup_Rmainloop(void)
        Perhaps it makes more sense to quit gracefully?
     */
 
+    printf("LOOP 7\n");
+
 #ifdef RMIN_ONLY
     /* This is intended to support a minimal build for experimentation. */
     if (R_SignalHandlers) init_signal_handlers();
 #else
+
+    printf("LOOP 8\n");
     FILE *fp = R_OpenLibraryFile("base");
+
+    FILE *fp_other = R_OpenLibraryFile("other_base");
+    printf("Loop 8.1\n");
     if (fp == NULL)
-	R_Suicide(_("unable to open the base package\n"));
+	    R_Suicide(_("unable to open the base package\n"));
 
     doneit = 0;
-    if (SETJMP(R_Toplevel.cjmpbuf))
-	check_session_exit();
+    if (SETJMP(R_Toplevel.cjmpbuf)) {
+        printf("this was tru\n");
+	    check_session_exit();
+    }
     R_GlobalContext = R_ToplevelContext = R_SessionContext = &R_Toplevel;
-    if (R_SignalHandlers) init_signal_handlers();
+    if (R_SignalHandlers) {
+        printf("Sig hanglders allso tru \n");
+        init_signal_handlers();
+    }
     if (!doneit) {
-	doneit = 1;
-	R_ReplFile(fp, baseNSenv);
+        printf("not done it\n");
+        doneit = 1;
+        R_ReplFile(fp, baseNSenv);
+        R_ReplFile(fp_other, baseNSenv);
     }
     fclose(fp);
+
+    printf("LOOP 9\n");
+
 #endif
 
     /* This is where we source the system-wide, the site's and the
@@ -1064,6 +1107,8 @@ void setup_Rmainloop(void)
     /* At least temporarily unlock some bindings used in graphics */
     R_unLockBinding(R_DeviceSymbol, R_BaseEnv);
     R_unLockBinding(R_DevicesSymbol, R_BaseEnv);
+
+    printf("LOOP 10\n");
 
     /* require(methods) if it is in the default packages */
     doneit = 0;
@@ -1083,6 +1128,8 @@ void setup_Rmainloop(void)
 	UNPROTECT(1);
     }
 
+    printf("LOOP 11\n");
+
     if (strcmp(R_GUIType, "Tk") == 0) {
 	char *buf = NULL;
 
@@ -1092,6 +1139,8 @@ void setup_Rmainloop(void)
 	R_LoadProfile(R_fopen(buf, "r"), R_GlobalEnv);
 	free(buf);
     }
+
+    printf("LOOP 12\n");
 
     /* Print a platform and version dependent greeting and a pointer to
      * the copyleft.
@@ -1106,6 +1155,8 @@ void setup_Rmainloop(void)
        environment. */
     R_removeVarFromFrame(install(".Library.site"), R_GlobalEnv);
     R_LoadProfile(R_OpenInitFile(), R_GlobalEnv);
+
+    printf("LOOP 13\n");
 
     /* This is where we try to load a user's saved data.
        The right thing to do here is very platform dependent.
@@ -1128,6 +1179,7 @@ void setup_Rmainloop(void)
     	    warning(_("unable to restore saved data in %s\n"), get_workspace_name());
 	}
     }
+    printf("LOOP 14\n");
 
     /* Initial Loading is done.
        At this point we try to invoke the .First Function.
@@ -1181,17 +1233,22 @@ void setup_Rmainloop(void)
 	REprintf(" ending setup_Rmainloop(): R_Interactive = %d {main.c}\n",
 		 R_Interactive);
 
+    printf("LOOP 15\n");
+
     /* trying to do this earlier seems to run into bootstrapping issues. */
     doneit = 0;
     if (SETJMP(R_Toplevel.cjmpbuf))
 	check_session_exit();
     R_GlobalContext = R_ToplevelContext = R_SessionContext = &R_Toplevel;
     if (!doneit) {
-	doneit = 1;
-	R_init_jit_enabled();
+        doneit = 1;
+        printf("LOOP Calling the JIT\n");
+        R_init_jit_enabled();
+        printf("LOOP JIT called\n");
     } else
 	R_Suicide(_("unable to initialize the JIT\n"));
     R_Is_Running = 2;
+    printf("LOOP 16\n");
 }
 
 extern SA_TYPE SaveAction; /* from src/main/startup.c */

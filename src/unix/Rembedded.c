@@ -58,9 +58,15 @@ extern void R_CleanTempDir(void);
 
 int Rf_initEmbeddedR(int argc, char **argv)
 {
+    printf("RRR unix Rf_initEmbeddedR\n");
+    R_Consolefile = NULL;
+    R_Outputfile = NULL;
     Rf_initialize_R(argc, argv);
+    printf("RRR unix R interactive true\n");
     R_Interactive = TRUE;  /* Rf_initialize_R set this based on isatty */
+    printf("RRR unix setup_Rmainloop\n");
     setup_Rmainloop();
+    printf("RRR unix return\n");
     return(1);
 }
 

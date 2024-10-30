@@ -580,9 +580,10 @@ static void cleanup_PrintWarnings(void *data)
     inPrintWarnings = 0;
 }
 
-attribute_hidden
+
 void PrintWarnings(void)
 {
+	printf("errors.c PrintWarnings\n");
     int i;
     char *header;
     SEXP names, s, t;

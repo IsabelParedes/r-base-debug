@@ -94,6 +94,11 @@ void
 R_common_command_line(int *pac, char **argv, Rstart Rp)
 {
     int ac = *pac, newac = 1;	/* argv[0] is process name */
+	if (argv == NULL || *pac == 0) {
+		// Handle the case where no command-line arguments are passed
+		printf("Returning\n");
+		return;
+	}
     long lval; /* this is used for ppval, so 32-bit long is fine */
     char *p, **av = argv, msg[1024];
     Rboolean processing = TRUE;

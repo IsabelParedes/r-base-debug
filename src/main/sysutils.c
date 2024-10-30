@@ -33,6 +33,7 @@
 #include <R_ext/Riconv.h>
 #include <Rinterface.h>
 #include <errno.h>
+#include <string.h>
 #include <rlocale.h>
 
 /*
@@ -140,7 +141,17 @@ static wchar_t * wcfixmode(const wchar_t *mode)
 
 FILE *R_fopen(const char *filename, const char *mode)
 {
-    return(filename ? fopen(filename, fixmode(mode)) : NULL );
+	errno = 0;
+	FILE *fp = fopen(filename, fixmode(mode));
+	// if (strcmp(filename, "/embed-env/lib/R/library/base/R/base.rdb") == 0) {
+	// 	fp = fopen("/allR_stuff.R", "r");
+	// 	printf("FOPEN %s. Filename: %s, Mode: %s\n", strerror(errno), filename, mode);
+	// } else {
+	// 	fp = fopen(filename, fixmode(mode));
+	// 	printf("FOPEN %s. Filename: %s, Mode: %s\n", strerror(errno), filename, mode);
+	// }
+	printf("FOPEN %s. Filename: %s, Mode: %s\n", strerror(errno), filename, mode);
+    return(filename ? fp : NULL );
 }
 
 /* The point of this function is to allow file names in foreign

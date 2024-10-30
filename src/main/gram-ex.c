@@ -47,7 +47,11 @@ int R_fgetc(FILE *fp)
        return '\n';
     }
 #else
-    int c = fgetc(fp);
+    if (fp == NULL) {
+        return R_EOF;
+    }
+    char c_char = fgetc(fp);
+    int c = (int) c_char;
 #endif
     /* get rid of  CR in CRLF line termination */
     if (c == '\r') {

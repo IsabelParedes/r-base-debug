@@ -295,6 +295,7 @@ NORET static void raiseLexError(const char *, int,
 */
 
 #include <rlocale.h>
+
 #ifdef HAVE_LANGINFO_CODESET
 # include <langinfo.h>
 #endif

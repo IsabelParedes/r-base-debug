@@ -1459,15 +1459,18 @@ static int MIN_JIT_SCORE = 50;
 
 static struct { unsigned long count, envcount, bdcount; } jit_info = {0, 0, 0};
 
-attribute_hidden void R_init_jit_enabled(void)
+void R_init_jit_enabled(void)
 {
+	printf("JIT R_init_jit_enabled\n");
     /* Need to force the lazy loading promise to avoid recursive
        promise evaluation when JIT is enabled. Might be better to do
        this in baseloader.R. */
-    eval(install(".ArgsEnv"), R_BaseEnv);
+    // eval(install(".ArgsEnv"), R_BaseEnv);
+	printf("Dont care about ArgsEnv\n");
 
     int val = 3; /* turn JIT on by default */
     char *enable = getenv("R_ENABLE_JIT");
+	printf("JIT is enabled? %s\n", enable);
     if (enable != NULL)
 	val = atoi(enable);
     if (val) {

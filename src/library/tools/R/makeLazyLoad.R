@@ -114,13 +114,13 @@ data2LazyLoadDB <- function(package, lib.loc = NULL, compress = TRUE)
         op <- options(encoding=enc)
         on.exit(options(encoding=op[[1L]]))
     }
-    if(dir.exists(dataDir)) {
-        if(file.exists(file.path(dataDir, "Rdata.rds")) &&
-	    file.exists(file.path(dataDir, paste0(package, ".rdx"))) &&
-	    file.exists(file.path(dataDir, paste0(package, ".rdb"))) ){
-            warning("package seems to be using lazy loading for data already")
-        }
-	else {
+    # if(dir.exists(dataDir)) {
+    #     if(file.exists(file.path(dataDir, "Rdata.rds")) &&
+	#     file.exists(file.path(dataDir, paste0(package, ".rdx"))) &&
+	#     file.exists(file.path(dataDir, paste0(package, ".rdb"))) ){
+    #         warning("package seems to be using lazy loading for data already")
+    #     }
+	# else {
             dataEnv <- new.env(hash = TRUE)
             tmpEnv <- new.env()
             f0 <- files <- list_files_with_type(dataDir, "data")
@@ -154,8 +154,8 @@ data2LazyLoadDB <- function(package, lib.loc = NULL, compress = TRUE)
                          compress = compress)
                 unlink(f0)
             }
-        }
-    }
+        # }
+    # }
 }
 
 makeLazyLoadDB <- function(from, filebase, compress = TRUE, ascii = FALSE,

@@ -28,7 +28,7 @@
 ## be what commandArgs(TRUE) would return, that is a character vector
 ## of (space-delimited) terms that would be passed to R CMD INSTALL.  E.g.
 ##
-if(FALSE) {
+if(TRUE) {
     tools:::.install_packages(c("--preclean", "--no-multiarch",
 				"tree"))
     ## or

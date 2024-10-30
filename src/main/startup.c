@@ -56,11 +56,16 @@ FILE *R_OpenLibraryFile(const char *file)
 {
     char *buf = NULL;
     FILE *fp = NULL;
+    printf("GATA %s/library/base/R/%s\n", R_Home, file);
 
     Rasprintf_malloc(&buf, "%s/library/base/R/%s", R_Home, file);
+    printf("GATA olvidare\n");
     if (buf) {
-	fp = R_fopen(buf, "r");
-	free(buf);
+        printf("GATA in the buffer\n");
+        fp = R_fopen(buf, "r");
+        printf("GATA opened\n");
+        free(buf);
+        printf("GATA freed\n");
     }
     return fp;
 }

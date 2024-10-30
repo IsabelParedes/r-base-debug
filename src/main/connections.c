@@ -6274,24 +6274,34 @@ SEXP R_compress1(SEXP in)
 attribute_hidden
 SEXP R_decompress1(SEXP in, Rboolean *err)
 {
+    printf("DECOMPRESS R_decompress1\n");
     if(TYPEOF(in) != RAWSXP)
 	error("R_decompress1 requires a raw vector");
 
     const void *vmax = vmaxget();
+
+    printf("DECOMPRESS R_decompress1 2\n");
 
     unsigned char *p = RAW(in);
     uLong inlen = LENGTH(in);
     uLong outlen = (uLong) uiSwap(*((unsigned int *) p));
     Bytef *buf = (Bytef *) R_alloc(outlen, sizeof(Bytef));
     int res = uncompress(buf, &outlen, (Bytef *)(p + 4), inlen - 4);
+
+    printf("DECOMPRESS R_decompress1 3\n");
     if(res != Z_OK) {
-	warning("internal error %d in R_decompress1", res);
-	*err = TRUE;
-	return R_NilValue;
+        printf("DECOMPRESS it went wrong\n");
+        warning("internal error %d in R_decompress1", res);
+        *err = TRUE;
+        return R_NilValue;
     }
+
+    printf("DECOMPRESS R_decompress1 4\n");
     SEXP ans = allocVector(RAWSXP, outlen);
     memcpy(RAW(ans), buf, outlen);
     vmaxset(vmax);
+
+    printf("DECOMPRESS R_decompress1 5\n");
     return ans;
 }
 #endif

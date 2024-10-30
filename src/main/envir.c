@@ -1544,6 +1544,9 @@ SEXP findFun3(SEXP symbol, SEXP rho, SEXP call)
 {
     SEXP vl;
 
+    // printf("FIND fun3 %s\n", EncodeChar(PRINTNAME(symbol)));
+    // PrintValue(rho);
+
     /* If the symbol is marked as special, skip to the first
        environment that might contain such a symbol. */
     if (IS_SPECIAL_SYMBOL(symbol)) {
@@ -1556,10 +1559,12 @@ SEXP findFun3(SEXP symbol, SEXP rho, SEXP call)
 #ifdef USE_GLOBAL_CACHE
 	if (rho == R_GlobalEnv)
 #ifdef FAST_BASE_CACHE_LOOKUP
-	    if (BASE_SYM_CACHED(symbol))
+	    if (BASE_SYM_CACHED(symbol)) {
 		vl = SYMBOL_BINDING_VALUE(symbol);
-	    else
+        }
+	    else {
 		vl = findGlobalVar(symbol);
+        }
 #else
 	    vl = findGlobalVar(symbol);
 #endif

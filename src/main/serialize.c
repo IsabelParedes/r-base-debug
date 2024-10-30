@@ -3277,14 +3277,18 @@ R_lazyLoadDBinsertValue(SEXP value, SEXP file, SEXP ascii,
    from a file, optionally decompresses, and unserializes the bytes.
    If the result is a promise, then the promise is forced. */
 
-attribute_hidden SEXP
+SEXP
 do_lazyLoadDBfetch(SEXP call, SEXP op, SEXP args, SEXP env)
 {
+	printf("LAZY LOAD DB FETCH\n");
     SEXP key, file, compsxp, hook;
     PROTECT_INDEX vpi;
     int compressed;
     Rboolean err = FALSE;
     SEXP val;
+	printf("Type of val1: %s\n", type2char(TYPEOF(val)));
+
+	printf("LAZY LOAD DB FETCH 1\n");
 
     checkArity(op, args);
     key = CAR(args); args = CDR(args);
@@ -3293,21 +3297,37 @@ do_lazyLoadDBfetch(SEXP call, SEXP op, SEXP args, SEXP env)
     hook = CAR(args);
     compressed = asInteger(compsxp);
 
+	printf("LAZY LOAD DB FETCH 2\n");
+
     PROTECT_WITH_INDEX(val = readRawFromFile(file, key), &vpi);
+	printf("Type of val2: %s\n", type2char(TYPEOF(val)));
     if (compressed == 3)
 	REPROTECT(val = R_decompress3(val, &err), vpi);
     else if (compressed == 2)
 	REPROTECT(val = R_decompress2(val, &err), vpi);
-    else if (compressed)
-	REPROTECT(val = R_decompress1(val, &err), vpi);
+    else if (compressed) {
+		REPROTECT(val = R_decompress1(val, &err), vpi);
+		printf("Type of val3: %s\n", type2char(TYPEOF(val)));
+	}
     if (err) error("lazy-load database '%s' is corrupt",
 		   translateChar(STRING_ELT(file, 0)));
+
+	printf("Type of val4: %s\n", type2char(TYPEOF(val)));
     val = R_unserialize(val, hook);
+	printf("Type of val5: %s\n", type2char(TYPEOF(val)));
+
+	printf("LAZY LOAD DB FETCH 3\n");
+
     if (TYPEOF(val) == PROMSXP) {
-	REPROTECT(val, vpi);
-	val = eval(val, R_GlobalEnv);
-	ENSURE_NAMEDMAX(val);
+		printf("PROMXSP val\n");
+		REPROTECT(val, vpi);
+		val = eval(val, R_GlobalEnv);
+		printf("Type of val6: %s\n", type2char(TYPEOF(val)));
+		ENSURE_NAMEDMAX(val);
+		printf("PROMXSP val end\n");
     }
+
+	printf("LAZY LOAD DB FETCH 4\n");
     UNPROTECT(1);
     return val;
 }

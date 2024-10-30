@@ -987,70 +987,76 @@ void Rvprintf(const char *format, va_list arg)
    It is also used in R_Suicide on Unix.
 */
 
-attribute_hidden
+
 int REvprintf_internal(const char *format, va_list arg)
 {
+	printf("printutils.c REvprintf_internal\n");
     static char *malloc_buf = NULL;
     int res;
 
     if (malloc_buf) {
-	char *tmp = malloc_buf;
-	malloc_buf = NULL;
-	free(tmp);
-    }
-    if(R_ErrorCon != 2) {
-	Rconnection con = getConnection_no_err(R_ErrorCon);
-	if(con == NULL) {
-	    /* should never happen, but in case of corruption... */
-	    R_ErrorCon = 2;
-	} else {
-	    /* Parentheses added for FC4 with gcc4 and -D_FORTIFY_SOURCE=2 */
-	    res = (con->vfprintf)(con, format, arg);
-	    con->fflush(con);
-	    return res;
-	}
-    }
-    if(R_Consolefile) {
-	/* try to interleave stdout and stderr carefully */
-	if(R_Outputfile && (R_Outputfile != R_Consolefile)) {
-	    fflush(R_Outputfile);
-	    res = vfprintf(R_Consolefile, format, arg);
-	    /* normally R_Consolefile is stderr and so unbuffered, but
-	       it can be something else (e.g. stdout on Win9x) */
-	    fflush(R_Consolefile);
-	} else
-	    res = vfprintf(R_Consolefile, format, arg);
-    } else {
-	char buf[BUFSIZE];
-	Rboolean printed = FALSE;
-	va_list aq;
-
-	va_copy(aq, arg);
-	res = Rvsnprintf_mbcs(buf, BUFSIZE, format, aq);
-	va_end(aq);
-	if (res >= BUFSIZE) {
-	    /* A very long string has been truncated. Try to allocate a large
-	       buffer for it to print it in full. Do not use R_alloc() as this
-	       can be run due to memory allocation error from the R heap.
-	       Do not use contexts and do not throw any errors nor warnings
-	       as this may be run from error handling. */
-	    int size = res + 1;
-	    malloc_buf = (char *)malloc(size * sizeof(char));
-	    if (malloc_buf) {
-		res = vsnprintf(malloc_buf, size, format, arg);
-		if (res == size - 1) {
-		    R_WriteConsoleEx(malloc_buf, res, 1);
-		    printed = TRUE;
-		}
+		printf("printutils.c malloc_buf\n");
 		char *tmp = malloc_buf;
 		malloc_buf = NULL;
 		free(tmp);
-	    }
-	}
-	if (!printed) {
-	    res = (int) strlen(buf);
-	    R_WriteConsoleEx(buf, res, 1);
-	}
+    }
+    if(R_ErrorCon != 2) {
+		printf("printutils.c R_ErrorCon\n");
+		Rconnection con = getConnection_no_err(R_ErrorCon);
+		if(con == NULL) {
+			/* should never happen, but in case of corruption... */
+			R_ErrorCon = 2;
+		} else {
+			/* Parentheses added for FC4 with gcc4 and -D_FORTIFY_SOURCE=2 */
+			res = (con->vfprintf)(con, format, arg);
+			con->fflush(con);
+			return res;
+		}
+    }
+    if(R_Consolefile) {
+		printf("printutils.c R_Consolefile\n");
+		/* try to interleave stdout and stderr carefully */
+		if(R_Outputfile && (R_Outputfile != R_Consolefile)) {
+			fflush(R_Outputfile);
+			res = vfprintf(R_Consolefile, format, arg);
+			/* normally R_Consolefile is stderr and so unbuffered, but
+			it can be something else (e.g. stdout on Win9x) */
+			fflush(R_Consolefile);
+		} else
+			res = vfprintf(R_Consolefile, format, arg);
+    } else {
+		printf("printutils.c else\n");
+		char buf[BUFSIZE];
+		Rboolean printed = FALSE;
+		va_list aq;
+
+		va_copy(aq, arg);
+		res = Rvsnprintf_mbcs(buf, BUFSIZE, format, aq);
+		va_end(aq);
+		if (res >= BUFSIZE) {
+			/* A very long string has been truncated. Try to allocate a large
+			buffer for it to print it in full. Do not use R_alloc() as this
+			can be run due to memory allocation error from the R heap.
+			Do not use contexts and do not throw any errors nor warnings
+			as this may be run from error handling. */
+			int size = res + 1;
+			malloc_buf = (char *)malloc(size * sizeof(char));
+			if (malloc_buf) {
+			res = vsnprintf(malloc_buf, size, format, arg);
+			if (res == size - 1) {
+				R_WriteConsoleEx(malloc_buf, res, 1);
+				printed = TRUE;
+			}
+			char *tmp = malloc_buf;
+			malloc_buf = NULL;
+			free(tmp);
+			}
+		}
+		if (!printed) {
+			printf("printutils.c not printed\n");
+			res = (int) strlen(buf);
+			R_WriteConsoleEx(buf, res, 1);
+		}
     }
     return res;
 }

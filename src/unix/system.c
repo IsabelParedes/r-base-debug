@@ -188,21 +188,36 @@ extern int R_isWriteableDir(char *path);
 
 int Rf_initialize_R(int ac, char **av)
 {
+	printf("viento ac: %d\n", ac);
+	for (int i = 0; i < ac; i++) {
+		printf("viento av[%d]: %s\n", i, av[i]);
+	}
+	printf("RRR unix Rf_initialize_R\n");
+	printf("RRR unix setting int\n");
     int i, ioff = 1, j;
+	printf("RRR unix setting bools\n");
     Rboolean useX11 = TRUE, useTk = FALSE;
-    char *p, msg[1024], cmdlines[10000], **avv;
+	printf("RRR unix setting char pointers\n");
+    char *p, msg[1024], **avv;
+	printf("RRR unix setting struct start\n");
     structRstart rstart;
+	printf("RRR unix setting Rp\n");
     Rstart Rp = &rstart;
+	printf("RRR unix setting force interactive\n");
     Rboolean force_interactive = FALSE;
 
+	printf("RRR unix if num initialized\n");
     if (num_initialized++) {
-	fprintf(stderr, "%s", "R is already initialized\n");
+	printf(stderr, "%s", "R is already initialized\n");
 	exit(1);
     }
+
+	printf("RRR unix done with initialize for now\n");
 
 
 #if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT)
 {
+	printf("dosis HAVE_SYS_RESOURCE_H\n");
     /* getrlimit is POSIX:
        https://pubs.opengroup.org/onlinepubs/9699919799/functions/getrlimit.html
     */
@@ -236,6 +251,7 @@ int Rf_initialize_R(int ac, char **av)
     }
 #if defined(HAVE_LIBC_STACK_END)
     {
+	printf("dosis HAVE_LIBC_STACK_END\n");
 	R_CStackStart = (uintptr_t) __libc_stack_end;
 	/* The libc stack end is not exactly at the stack start, so one
 	   cannot access __libc_stack_end - R_CStackLimit/getrlimit + 1. We
@@ -276,6 +292,7 @@ int Rf_initialize_R(int ac, char **av)
     }
 #elif defined(HAVE_KERN_USRSTACK)
     {
+	printf("dosis HAVE_KERN_USRSTACK\n");
 	/* Borrowed from mzscheme/gc/os_dep.c */
 	int nm[2] = {CTL_KERN, KERN_USRSTACK};
 	void * base;
@@ -285,6 +302,7 @@ int Rf_initialize_R(int ac, char **av)
     }
 #elif defined(HAVE_THR_STKSEGMENT)
     {
+	printf("HAVE_THR_STKSEGMENT\n");
 	/* Solaris */
 	stack_t stack;
 	if (thr_stksegment(&stack))
@@ -297,18 +315,21 @@ int Rf_initialize_R(int ac, char **av)
 	   suggest getrlimit is safe here. */
     }
 #else
+	printf("dosis else");
     if(R_running_as_main_program) {
 	/* This is not the main program, but unless embedded it is
 	   near the top, 5540 bytes away when checked. */
 	R_CStackStart = (uintptr_t) &i + (6000 * R_CStackDir);
     }
 #endif
+	printf("dosis last bit");
     if(R_CStackStart == (uintptr_t)(-1)) R_CStackLimit = (uintptr_t)(-1); /* never set */
 
     /* setup_Rmainloop includes (disabled) code to test stack detection */
 }
 #endif
 
+	printf("panteon pointers\n");
     ptr_R_Suicide = Rstd_Suicide;
     ptr_R_ShowMessage = Rstd_ShowMessage;
     ptr_R_ReadConsole = Rstd_ReadConsole;
@@ -329,39 +350,55 @@ int Rf_initialize_R(int ac, char **av)
 
     R_GlobalContext = NULL; /* Make R_Suicide less messy... */
 
-    if((R_Home = R_HomeDir()) == NULL) R_Home = "lib/R";
+    if((R_Home = R_HomeDir()) == NULL) R_Home = "/lib/R";
 	// R_Suicide("R home directory is not defined");
     BindDomain(R_Home);
 
+	printf("panteon process sys env\n");
     process_system_Renviron();
 
+	printf("luz set start time\n");
     R_setStartTime();
+
+	printf("luz def params ex\n");
     R_DefParamsEx(Rp, RSTART_VERSION);
     /* Store the command line arguments before they are processed
        by the R option handler.
      */
+	printf("lux set cmd line args\n");
     R_set_command_line_arguments(ac, av);
+
+	char cmdlines[10000];
     cmdlines[0] = '\0';
 
     /* first task is to select the GUI.
        If run from the shell script, only Tk|tk|X11|x11 are allowed.
      */
+	printf("panteon select gui\n");
     for(i = 0, avv = av; i < ac; i++, avv++) {
+		printf("uhhhhhh temores\n");
 	if (!strcmp(*avv, "--args"))
 	    break;
-	if(!strncmp(*avv, "--gui", 5) || !strncmp(*avv, "-g", 2)) {
-	    if(!strncmp(*avv, "--gui", 5) && strlen(*avv) >= 7)
-		p = &(*avv)[6];
-	    else {
+	if(!strncmp(*avv, "--c", 5) || !strncmp(*avv, "-g", 2)) {
+		printf("temores 0\n");
+	    if(!strncmp(*avv, "--gui", 5) && strlen(*avv) >= 7) {
+			printf("temores 1\n");
+			p = &(*avv)[6];
+		} else {
+		printf("temores 2\n");
 		if(i+1 < ac) {
+			printf("temores 3\n");
 		    avv++; p = *avv; ioff++;
 		} else {
-		    snprintf(msg, 1024,
+			printf("temores 4\n");
+		    printf(msg, 1024,
 			    _("WARNING: --gui or -g without value ignored"));
 		    R_ShowMessage(msg);
 		    p = "X11";
 		}
+		printf("temores 5\n");
 	    }
+		printf("temores 6\n");
 	    if(!strcmp(p, "none"))
 		useX11 = FALSE; // not allowed from R.sh
 #ifdef HAVE_AQUA
@@ -374,31 +411,36 @@ int Rf_initialize_R(int ac, char **av)
 		useTk = TRUE;
 	    else {
 #ifdef HAVE_X11
-		snprintf(msg, 1024,
+		printf(msg, 1024,
 			 _("WARNING: unknown gui '%s', using X11\n"), p);
 #else
-		snprintf(msg, 1024,
+		printf(msg, 1024,
 			 _("WARNING: unknown gui '%s', using none\n"), p);
 #endif
 		R_ShowMessage(msg);
 	    }
+		printf("temores 7\n");
 	    /* now remove it/them */
 	    for(j = i; j < ac - ioff; j++)
 		av[j] = av[j + ioff];
 	    ac -= ioff;
+		printf("temores 8\n");
 	    break;
 	}
     }
 
 #ifdef HAVE_X11
+	printf("panteon x11");
     if(useX11) R_GUIType = "X11";
 #endif /* HAVE_X11 */
 
 #ifdef HAVE_AQUA
+	printf("panteon aqua");
     if(useaqua) R_GUIType = "AQUA";
 #endif
 
 #ifdef HAVE_TCLTK
+	printf("panteon tcltk");
     if(useTk) R_GUIType = "Tk";
 #endif
 
@@ -533,6 +575,7 @@ int Rf_initialize_R(int ac, char **av)
     }
 #endif
 
+	printf("panteon save no save");
 
 /*
  *  Since users' expectations for save/no-save will differ, we decided
@@ -547,6 +590,7 @@ int Rf_initialize_R(int ac, char **av)
 	Rstd_read_history(R_HistoryFile);
     fpu_setup(1);
 
+	printf("panteon return");
     return(0);
 }
 
